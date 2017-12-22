@@ -15,33 +15,62 @@ In the following assignment you will be looking at data from an one level of an 
 #Visualization 
 ```{r}
 #Start by creating histograms of the distributions for all variables (#HINT: look up "facet" in the ggplot documentation)
+library(dplyr)
+library(tidyr)
+D1 <- select(D1, -id)
+D1$level.up <- ifelse(D1$level.up=="yes",1,0)
+D2 <= gather(D1,key=variable, value=value)
 
-#Then visualize the relationships between variables
-
-#Try to capture an intution about the data and the relationships
+library(ggplot2)
+hist <-ggplot(D2, aes(c=value)) + geom_histogram(binwidth=0.05) +
+  facet_wrap(~variable,scales="free")
+hist
 
 ```
+
+```{r}
+pairs(D1, labels=colnames(D1),main="Relationships Between Variables")
+
+library(corrplot)
+COR <- cor(D1)
+corrplot(COR,order="AOE",method="circle",tl.pos="lt",type="upper",
+         tl.col"black",tl.cex=0.6,tl.srt=45,
+         addCoef.col="black",addCoefasPercent = TRUE,
+         sig.level=0.50,insig="blank")
+
+```
+
 #Classification tree
 ```{r}
 #Create a classification tree that predicts whether a student "levels up" in the online course using three variables of your choice (As we did last time, set all controls to their minimums)
+```{r}
+library(rpart)
+c.tree <- rpart(level.up~post.test.score+messages+av.assignment.score,
+                method="class",data=D1)
+```
 
-#Plot and generate a CP table for your tree 
+```{r}
+post(c.tree1, file = "prediction1.ps", title = "Level Up 1")
+printcp(c.tree1)
+```
 
-#Generate a probability value that represents the probability that a student levels up based your classification tree 
+```{r}
+D1$pred1 <- predict(c.tree1,type, type = "prob") [,2]
+```
 
-D1$pred <- predict(rp, type = "prob")[,2]#Last class we used type = "class" which predicted the classification for us, this time we are using type = "prob" to see the probability that our classififcation is based on.
-
-#Now you can generate the ROC curve for your model. You will need to install the package ROCR to do this.
-
+```{r}
 library(ROCR)
+```
 
-#Plot the curve
-pred.detail <- prediction(D1$pred, D1$level.up) 
-plot(performance(pred.detail, "tpr", "fpr"))
-abline(0, 1, lty = 2)
+```{r}
+pred.detail1 <- prediction(D1$pred1, D1$level.up)
+plot(performance(pred.detail1."tpr","fpr"))
+abline(0,1,lty = 2)
+```
 
-#Calculate the Area Under the Curve
-unlist(slot(performance(Pred2,"auc"), "y.values"))#Unlist liberates the AUC value from the "performance" object created by ROCR
+```{r}
+unlist(slot(performance(ored.detail1,"auc"),"y.values"))
+```
 
 #Now repeat this process, but using the variables you did not use for the previous model and compare the plots & results of your two models. Which one do you think was the better model? Why?
 
@@ -50,15 +79,17 @@ unlist(slot(performance(Pred2,"auc"), "y.values"))#Unlist liberates the AUC valu
 ```{r}
 #Look at the ROC plot for your first model. Based on this plot choose a probability threshold that balances capturing the most correct predictions against false positives. Then generate a new variable in your data set that classifies each student according to your chosen threshold.
 
-threshold.pred1 <- 
+D1$threshold.pred1 <- ifelse(D1$pred1 > 0.8,1,0)
 
 #Now generate three diagnostics:
 
-D1$accuracy.model1 <-
+D1$TPTN <- ifelse(D1$level.up==D1$threshold.pred1,1,0)
+accurary.model <- sum(D1$TPTN)/nrow(D1)
 
-D1$precision.model1 <- 
-
-D1$recall.model1 <- 
+D1$Tp <-ifelse(D1$threshold.pred1==1 & D1$level.up==1,1,0)
+precision.model1 <- sum(D1$TP)/sum(D1$threshold.pre1)
+D1$FN <- ifelse(D1$threshold.pre1==0 $ D1level.up==1,1,0)
+recall.model1 <- sum(D1$TP)/(sum(D1$TP)+sum(D1$FN))
 
 #Finally, calculate Kappa for your model according to:
 
